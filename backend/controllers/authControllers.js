@@ -46,7 +46,11 @@ exports.login = async(req,res)=>{
 
             if(isMatch){
                 const token = jwt.sign({userId: result.rows[0].id},JWT_SECRET,{expiresIn:'1h'})
-               res.status(200).json({message:"Login successfully!",userName:result.rows[0].username,token})   
+               res.status(200).json({message:"Login successfully!",user:{
+                userId:result.rows[0].id,
+                username:result.rows[0].username,
+                email:result.rows[0].email
+               },token})   
             }else{
                res.status(400).json({message:"Qupiya soz saikes kelmeidy!"})
             }
