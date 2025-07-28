@@ -84,3 +84,55 @@ exports.posts = async(req,res)=>{
         res.status(400).json({message:"Постты алуда қателіктер туындады!"})
     }
 }
+
+exports.updatePost = async (req, res) => {
+  const { title, content } = req.body;
+  const { id } = req.params;
+  const userId = req.user.userId; // токен арқылы келген
+
+  if (!title || !content) {
+    return res.status(400).json({ message: "Title және Content қажет" });
+  }
+
+  try {
+    // Тексеру: пост бар ма және осы user-ге тиесілі ме?
+    const postCheck = await pool.query('SELECT * FROM posts WHERE id = $1', [id]);
+    if (postCheck.rows.length === 0) {
+      return res.status(404).json({ message: "Пост табылмады" });
+    }
+    if (postCheck.rows[0].user_id !== userId) {
+      return res.status(403).json({ message: "Сен бұл постты өзгерте алмайсың" });
+    }
+
+    const result = await pool.query(
+      'UPDATE posts SET title = $1, content = $2 WHERE id = $3 RETURNING *',
+      [title, content, id]
+    );
+
+    res.status(200).json(result.rows[0]);
+  } catch (err) {
+    console.error("Постты жаңарту қатесі:", err);
+    res.status(500).json({ message: "Постты жаңартуда қате кетті" });
+  }
+};
+
+exports.deletePost = async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.userId;
+
+  try {
+    const postCheck = await pool.query('SELECT * FROM posts WHERE id = $1', [id]);
+    if (postCheck.rows.length === 0) {
+      return res.status(404).json({ message: "Пост табылмады" });
+    }
+    if (postCheck.rows[0].user_id !== userId) {
+      return res.status(403).json({ message: "Сен бұл постты өшіре алмайсың" });
+    }
+
+    await pool.query('DELETE FROM posts WHERE id = $1', [id]);
+    res.status(200).json({ message: "Пост сәтті өшірілді" });
+  } catch (err) {
+    console.error("Постты өшіру қатесі:", err);
+    res.status(500).json({ message: "Постты өшіру кезінде қате болды" });
+  }
+}

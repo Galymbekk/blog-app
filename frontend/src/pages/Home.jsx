@@ -21,7 +21,17 @@ export default function Home() {
   },[])
 
   const handleUpdate = (updatedPost) => {
-    axios.put(`http://localhost:8000/api/updatePost/${updatedPost.id}`, updatedPost)
+  const token = localStorage.getItem('token') // токенді localStorage-тен аламыз
+
+  axios.put(
+    `http://localhost:8000/api/updatePost/${updatedPost.id}`,
+      updatedPost,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    )
       .then(res => {
         setPosts(prev => prev.map(p => p.id === updatedPost.id ? res.data : p))
         setShowModal(false)
@@ -34,7 +44,16 @@ export default function Home() {
 
   const handleDelete = (id) => {
     if (confirm("Постты өшіргіңіз келе ме?")) {
-      axios.delete(`http://localhost:8000/api/deletePost/${id}`)
+      const token = localStorage.getItem('token')
+
+      axios.delete(
+        `http://localhost:8000/api/deletePost/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      )
         .then(() => {
           setPosts(prev => prev.filter(p => p.id !== id))
         })
@@ -44,9 +63,10 @@ export default function Home() {
     }
   }
 
+
   let signedUser = JSON.parse(localStorage.getItem('user'))
 
-  const filteredPosts = filter === "all" ? posts : posts.filter(post => post.user_id === signedUser.id)
+  const filteredPosts = filter === "all" ? posts : posts.filter(post => post.user_id === signedUser.userId)
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
@@ -144,7 +164,7 @@ export default function Home() {
                 {new Date(post.created_at).toLocaleDateString()}
               </div>
 
-              {filter === "my" && post.user_id === signedUser.id && (
+              {filter === "my" && post.user_id === signedUser.userId && (
                 <div className="flex gap-3">
                   <button 
                     onClick={() => {
