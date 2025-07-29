@@ -1,7 +1,7 @@
 let express = require('express')
 let multer = require('multer')
 let path = require('path')
-const { users, login, register, addPost, posts, updatePost, deletePost } = require('../controllers/authControllers')
+const { login, register, addPost, posts, updatePost, deletePost, profile } = require('../controllers/authControllers')
 const { limiter, authenticateToken } = require('../middleware/authMiddleware')
 
 const router = express.Router()
@@ -18,7 +18,7 @@ const fileFilter = (req,file,cb)=>{
 
 let upload = multer({storage,fileFilter})
 
-router.get('/users',users)
+router.get('/profile',authenticateToken,profile)
 
 router.get('/posts',posts)
 

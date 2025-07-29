@@ -3,12 +3,26 @@ let jwt = require('jsonwebtoken')
 let pool = require('../config/db')
 const { JWT_SECRET } = require('../config/env')
 
-exports.users = async(req,res)=>{
+exports.profile = async(req,res)=>{
     try{
-        let result = await pool.query('select * from users')
-        result.rows.length > 0 ? res.status(200).json(result.rows) : res.status(400).json({message:"Userlerdi alu mumkin bolmady!!"})
+      // req.user => {
+          // "userId": 6,
+          // "iat": 1753762428,
+          // "exp": 1753766028
+      // }
+
+      let userId = req.user.userId
+
+      let user = await pool.query('select id,username,email from users where id=$1',[userId])
+      const userData= user.rows[0]
+
+      let myposts = await pool.query('select * from posts where user_id= $1',[userId])
+      const myPostsData = myposts.rows
+
+     res.status(200).json({userData:{...userData},myPosts:[...myPostsData]})
     }catch(err){
-        console.log('DB-men bailanysu mumkin bolmady!', err);   
+      console.log("Ақпараттар жүйесімен байланысу мүмкін болмады!");
+      res.status(500).json({message:"Сервердің қатесі!"})
     }
 }  
 
